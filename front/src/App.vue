@@ -1,28 +1,38 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <div>名前:</div>
+    <input v-model="userName" type="text" />
+    <input type="submit" value="入室" />
+
+    <hr />
+
+    <div>{{ turnUserName }}さんのターン:</div>
+
+    <input type="text" name="" />
+    <input type="submit" />
+    <div v-for="(post, i) in posts" :key="i">
+      <div>↑</div>
+      <div>{{ post.userName }} : " {{ post.word }} "</div>
+    </div>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
+  name: "App",
+  data: () => ({
+    userName: "",
+    turnUserName: "yado",
+    posts: [
+      { userName: "yado", word: "elephant" },
+      { userName: "abc", word: "apple" },
+    ],
+  }),
+};
 </script>
 
 <style>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
 }
 </style>
