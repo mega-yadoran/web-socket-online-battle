@@ -1,18 +1,44 @@
 <template>
   <div id="app">
-    <div>名前:</div>
-    <input v-model="userName" type="text" />
-    <input type="submit" value="入室" />
+    <!-- 入室済の場合、部屋の情報を表示 -->
+    <div v-if="isJoined">
+      <div>{{ userName }} さん</div>
+      部屋番号: {{ roomId }}
+    </div>
+
+    <!-- 未入室の場合、部屋を作る or 部屋に入るを選択 -->
+    <div v-else>
+      <div>名前: <input v-model="userName" type="text" /></div>
+
+      <input type="radio" v-model="joinType" value="1" />新しく部屋を作る
+      <input type="radio" v-model="joinType" value="2" />友達の部屋に入る
+
+      <div v-if="joinType == 1">
+        <input type="button" value="部屋を作る" @click="createRoom" />
+      </div>
+
+      <div v-if="joinType == 2">
+        部屋番号: <input v-model="roomId" type="text" />
+        <input type="button" value="入室" @click="enterRoom" />
+      </div>
+    </div>
+
+    <div style="color: red">
+      {{ errorMessage }}
+    </div>
 
     <hr />
 
-    <div>{{ turnUserName }}さんのターン:</div>
+    <!-- しりとり表示 -->
+    <div v-if="isJoined">
+      <div>{{ turnUserName }}さんのターン:</div>
 
-    <input type="text" name="" />
-    <input type="submit" />
-    <div v-for="(post, i) in posts" :key="i">
-      <div>↑</div>
-      <div>{{ post.userName }} : " {{ post.word }} "</div>
+      <input type="text" name="" />
+      <input type="submit" />
+      <div v-for="(post, i) in posts" :key="i">
+        <div>↑</div>
+        <div>{{ post.userName }} : " {{ post.word }} "</div>
+      </div>
     </div>
   </div>
 </template>
@@ -24,11 +50,12 @@ export default {
   name: "App",
   data: () => ({
     userName: "",
-    turnUserName: "yado",
-    posts: [
-      { userName: "yado", word: "elephant" },
-      { userName: "abc", word: "apple" },
-    ],
+    joinType: 1,
+    isJoined: false,
+    roomId: "",
+    errorMessage: "",
+    turnUserName: "",
+    posts: [],
     socket: io("http://localhost:3031"),
   }),
 
@@ -36,6 +63,31 @@ export default {
     this.socket.on("connect", () => {
       console.log("connected");
     });
+  },
+
+  mounted() {
+    this.socket.on("updateRoom", (room) => {
+      this.isJoined = true;
+      this.roomId = room.id;
+      this.turnUserName = room.users[room.turnUserIndex].name;
+      this.posts = room.posts;
+    });
+
+    this.socket.on("notifyError", (error) => {
+      this.errorMessage = error;
+    });
+  },
+
+  methods: {
+    createRoom() {
+      this.socket.emit("create", this.userName);
+      this.errorMessage = "";
+    },
+
+    enterRoom() {
+      this.socket.emit("enter", this.userName, this.roomId);
+      this.errorMessage = "";
+    },
   },
 };
 </script>
