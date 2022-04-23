@@ -31,10 +31,21 @@
 
     <!-- しりとり表示 -->
     <div v-if="isJoined">
-      <div>{{ turnUserName }}さんのターン:</div>
+      <!-- ゲームオーバー時の表示 -->
+      <div v-if="isGameOver">
+        <div style="color: red">{{ posts[0].userName }} さんの負け</div>
+        <input type="button" value="最初から" @click="restart" />
+      </div>
 
-      <input type="text" name="" />
-      <input type="submit" />
+      <!-- 入力欄 -->
+      <div v-else>
+        <div>{{ turnUserName }}さんのターン:</div>
+
+        <input type="text" v-model="input" />
+        <input type="button" value="送信" @click="postWord" />
+      </div>
+
+      <!-- 入力履歴 -->
       <div v-for="(post, i) in posts" :key="i">
         <div>↑</div>
         <div>{{ post.userName }} : " {{ post.word }} "</div>
@@ -55,6 +66,8 @@ export default {
     roomId: "",
     errorMessage: "",
     turnUserName: "",
+    isGameOver: false,
+    input: "",
     posts: [],
     socket: io("http://localhost:3031"),
   }),
@@ -71,6 +84,9 @@ export default {
       this.roomId = room.id;
       this.turnUserName = room.users[room.turnUserIndex].name;
       this.posts = room.posts;
+      this.errorMessage = "";
+      this.input = "";
+      this.isGameOver = room.posts.length > 0 && room.posts[0].isGameOver;
     });
 
     this.socket.on("notifyError", (error) => {
@@ -86,6 +102,16 @@ export default {
 
     enterRoom() {
       this.socket.emit("enter", this.userName, this.roomId);
+      this.errorMessage = "";
+    },
+
+    postWord() {
+      this.socket.emit("post", this.input);
+      this.errorMessage = "";
+    },
+
+    restart() {
+      this.socket.emit("restart");
       this.errorMessage = "";
     },
   },
