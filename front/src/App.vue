@@ -18,6 +18,8 @@
 </template>
 
 <script>
+import io from "socket.io-client";
+
 export default {
   name: "App",
   data: () => ({
@@ -27,7 +29,14 @@ export default {
       { userName: "yado", word: "elephant" },
       { userName: "abc", word: "apple" },
     ],
+    socket: io("http://localhost:3031"),
   }),
+
+  created() {
+    this.socket.on("connect", () => {
+      console.log("connected");
+    });
+  },
 };
 </script>
 
