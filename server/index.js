@@ -64,8 +64,7 @@ io.on("connection", (socket) => {
       isGameOver: checkGameOver(input),
     });
     // ターンプレイヤーを次のユーザーに進める
-    rooms[roomIndex].turnUserIndex =
-      room.turnUserIndex == room.users.length - 1 ? 0 : room.turnUserIndex + 1;
+    rooms[roomIndex].turnUserIndex = getNextTurnUserIndex(room);
 
     io.in(room.id).emit("updateRoom", room);
   });
@@ -79,9 +78,41 @@ io.on("connection", (socket) => {
 
     io.in(room.id).emit("updateRoom", room);
   });
+
+  // 接続が切れた場合
+  socket.on("disconnect", () => {
+    const user = users.find((u) => u.id == socket.id);
+    if (!user) {
+      console.log("見つかりませんでした");
+      return;
+    }
+    const roomIndex = rooms.findIndex((r) => r.id == user.roomId);
+    const room = rooms[roomIndex];
+    const userIndex = room.users.findIndex((u) => u.id == socket.id);
+    // ターンプレイヤーの場合、次のユーザーに進める
+    if (userIndex == room.turnUserIndex) {
+      rooms[roomIndex].turnUserIndex = getNextTurnUserIndex(room);
+    }
+    // ユーザーのデータを削除
+    rooms[roomIndex].users.splice(userIndex, 1);
+    users.splice(
+      users.findIndex((u) => u.id == socket.id),
+      1
+    );
+    // ターンプレイヤーのindexが1ズレないように補正
+    if (room.turnUserIndex > userIndex) {
+      rooms[roomIndex].turnUserIndex--;
+    }
+
+    io.in(room.id).emit(
+      "notifyDisconnection",
+      user.name,
+      room.users[rooms[roomIndex].turnUserIndex].name
+    );
+  });
 });
 
-// ランダムなroomIdを生成する
+// ランダムなroomId(1000~9999)を生成する
 function generateRoomId() {
   const id = Math.floor(Math.random() * 8999 + 1000);
   if (rooms.some((r) => r.id == id)) {
@@ -108,6 +139,13 @@ function checkWord(word, posts) {
 // 終了(xで終わる単語を入力したかどうか)判定
 function checkGameOver(word) {
   return word.slice(-1) == "x";
+}
+
+// 次のターンプレイヤーのindexを返却
+function getNextTurnUserIndex(room) {
+  return room.turnUserIndex == room.users.length - 1
+    ? 0
+    : room.turnUserIndex + 1;
 }
 
 http.listen(3031);

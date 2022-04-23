@@ -24,7 +24,7 @@
     </div>
 
     <div style="color: red">
-      {{ errorMessage }}
+      {{ message }}
     </div>
 
     <hr />
@@ -64,7 +64,7 @@ export default {
     joinType: 1,
     isJoined: false,
     roomId: "",
-    errorMessage: "",
+    message: "",
     turnUserName: "",
     isGameOver: false,
     input: "",
@@ -84,35 +84,40 @@ export default {
       this.roomId = room.id;
       this.turnUserName = room.users[room.turnUserIndex].name;
       this.posts = room.posts;
-      this.errorMessage = "";
+      this.message = "";
       this.input = "";
       this.isGameOver = room.posts.length > 0 && room.posts[0].isGameOver;
     });
 
     this.socket.on("notifyError", (error) => {
-      this.errorMessage = error;
+      this.message = error;
+    });
+
+    this.socket.on("notifyDisconnection", (userName, turnUserName) => {
+      this.message = userName + " さんが退室しました";
+      this.turnUserName = turnUserName;
     });
   },
 
   methods: {
     createRoom() {
       this.socket.emit("create", this.userName);
-      this.errorMessage = "";
+      this.message = "";
     },
 
     enterRoom() {
       this.socket.emit("enter", this.userName, this.roomId);
-      this.errorMessage = "";
+      this.message = "";
     },
 
     postWord() {
       this.socket.emit("post", this.input);
-      this.errorMessage = "";
+      this.message = "";
     },
 
     restart() {
       this.socket.emit("restart");
-      this.errorMessage = "";
+      this.message = "";
     },
   },
 };
