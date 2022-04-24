@@ -10,6 +10,10 @@ const users = [];
 io.on("connection", (socket) => {
   // 部屋を新しく建てる
   socket.on("create", (userName) => {
+    if (userName == "") {
+      io.to(socket.id).emit("notifyError", "名前を入力してください");
+      return;
+    }
     const roomId = generateRoomId();
     const user = { id: socket.id, name: userName, roomId };
     const room = {
@@ -26,6 +30,10 @@ io.on("connection", (socket) => {
 
   // 部屋に入室する
   socket.on("enter", (userName, roomId) => {
+    if (userName == "") {
+      io.to(socket.id).emit("notifyError", "名前を入力してください");
+      return;
+    }
     const roomIndex = rooms.findIndex((r) => r.id == roomId);
     if (roomIndex == -1) {
       io.to(socket.id).emit("notifyError", "部屋が見つかりません");
@@ -83,7 +91,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     const user = users.find((u) => u.id == socket.id);
     if (!user) {
-      console.log("見つかりませんでした");
+      // userデータがないときは未入室なので何もせず終了
       return;
     }
     const roomIndex = rooms.findIndex((r) => r.id == user.roomId);
