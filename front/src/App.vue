@@ -65,10 +65,10 @@ export default {
     isJoined: false,
     roomId: "",
     message: "",
-    turnUserName: "",
-    isGameOver: false,
     input: "",
+    turnUserName: "",
     posts: [],
+    isGameOver: false,
     socket: io("http://localhost:3031"),
   }),
 
@@ -82,9 +82,9 @@ export default {
     this.socket.on("updateRoom", (room) => {
       this.isJoined = true;
       this.roomId = room.id;
+      this.message = "";
       this.turnUserName = room.users[room.turnUserIndex].name;
       this.posts = room.posts;
-      this.message = "";
       this.input = "";
       this.isGameOver = room.posts.length > 0 && room.posts[0].isGameOver;
     });

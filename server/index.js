@@ -37,13 +37,13 @@ io.on("connection", (socket) => {
     const roomIndex = rooms.findIndex((r) => r.id == roomId);
     if (roomIndex == -1) {
       io.to(socket.id).emit("notifyError", "部屋が見つかりません");
-    } else {
-      const user = { id: socket.id, name: userName, roomId };
-      rooms[roomIndex].users.push(user);
-      users.push(user);
-      socket.join(rooms[roomIndex].id);
-      io.to(socket.id).emit("updateRoom", rooms[roomIndex]);
+      return;
     }
+    const user = { id: socket.id, name: userName, roomId };
+    rooms[roomIndex].users.push(user);
+    users.push(user);
+    socket.join(rooms[roomIndex].id);
+    io.to(socket.id).emit("updateRoom", rooms[roomIndex]);
   });
 
   // しりとりの単語を送信
